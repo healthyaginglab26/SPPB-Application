@@ -13,10 +13,7 @@ import '../summary_screen.dart';
 const _maxSeconds = 60;
 const _targetReps = 5;
 
-/// Times 5 consecutive sit-to-stand repetitions. The administrator taps
-/// "+1 stand" after each completed repetition; the timer auto-stops the
-/// instant the 5th is logged, or at 60 seconds if 5 aren't reached
-/// (an automatic score of 0 per protocol).
+/// Times 5 consecutive sit-to-stand repetitions. The administrator taps +1 stand button for each one completed.
 class ChairStandTimedScreen extends StatefulWidget {
   const ChairStandTimedScreen({super.key});
 

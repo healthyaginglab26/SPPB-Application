@@ -152,13 +152,19 @@ create policy "anon can insert balance_trials" on public.balance_trials
   for insert to anon with check (true);
 create policy "anon can select balance_trials" on public.balance_trials
   for select to anon using (true);
+create policy "anon can update balance_trials" on public.balance_trials
+  for update to anon using (true) with check (true);
 
 create policy "anon can insert gait_trials" on public.gait_trials
   for insert to anon with check (true);
 create policy "anon can select gait_trials" on public.gait_trials
   for select to anon using (true);
+create policy "anon can update gait_trials" on public.gait_trials
+  for update to anon using (true) with check (true);
 
 create policy "anon can insert chair_stand_trials" on public.chair_stand_trials
   for insert to anon with check (true);
 create policy "anon can select chair_stand_trials" on public.chair_stand_trials
   for select to anon using (true);
+create policy "anon can update chair_stand_trials" on public.chair_stand_trials
+  for update to anon using (true) with check (true);

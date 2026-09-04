@@ -8,11 +8,6 @@ import '../services/scoring_service.dart';
 import '../services/supabase_service.dart';
 
 /// Holds all state for the SPPB assessment currently being administered:
-/// the header info, every trial result collected so far, and the
-/// derived scores. One instance lives for the lifetime of a single
-/// assessment (created fresh from [HomeScreen] each time "New
-/// Assessment" is tapped) and is provided down the widget tree via
-/// `provider`.
 class AssessmentSession extends ChangeNotifier {
   Assessment assessment = Assessment();
   String? _assessmentId;
@@ -21,11 +16,19 @@ class AssessmentSession extends ChangeNotifier {
   final List<GaitTrial> _gaitTrials = [];
   ChairStandResult chairStand = const ChairStandResult();
 
+  // Course length chosen on the gait course-length prompt (3.0 or 4.0),
+  double? gaitDistanceMeters;
+
   String? get assessmentId => _assessmentId;
 
   BalanceTrial? trialFor(BalanceStance stance) => _balanceTrials[stance];
 
   List<GaitTrial> get gaitTrials => List.unmodifiable(_gaitTrials);
+
+  void setGaitDistance(double meters) {
+    gaitDistanceMeters = meters;
+    notifyListeners();
+  }
 
   // Scoring (Computed live to update score)
 
@@ -41,7 +44,10 @@ class AssessmentSession extends ChangeNotifier {
         _gaitTrials.map((t) => t.timeSeconds),
       );
 
-  int get gaitScore => ScoringService.gaitScore(bestGaitTime);
+  int get gaitScore => ScoringService.gaitScore(
+        bestGaitTime,
+        distanceMeters: gaitDistanceMeters ?? 4.0,
+      );
 
   int get chairStandScore => ScoringService.chairStandScore(
         singleStandSuccessful: chairStand.singleStandSuccessful ?? false,
@@ -58,8 +64,7 @@ class AssessmentSession extends ChangeNotifier {
   bool get shouldAttemptSemiTandem =>
       (_balanceTrials[BalanceStance.sideBySide]?.scorableSeconds ?? 0) >= 10;
 
-  /// Whether the tandem stance should be attempted, based on the
-  /// semi-tandem result.
+  // Whether the tandem stance should be attempted,
   bool get shouldAttemptTandem =>
       (_balanceTrials[BalanceStance.semiTandem]?.scorableSeconds ?? 0) >= 10;
 

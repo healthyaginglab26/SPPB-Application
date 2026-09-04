@@ -77,6 +77,39 @@ void main() {
       expect(ScoringService.bestGaitTime([null, 5.9]), 5.9);
       expect(ScoringService.bestGaitTime([null, null]), null);
     });
+
+    group('3-meter course', () {
+      test('unable -> 0', () {
+        expect(
+          ScoringService.gaitScore(null, distanceMeters: 3.0),
+          0,
+        );
+      });
+      test('slow (>6.52s) -> 1', () {
+        expect(
+          ScoringService.gaitScore(6.53, distanceMeters: 3.0),
+          1,
+        );
+      });
+      test('4.66-6.52s -> 2', () {
+        expect(
+          ScoringService.gaitScore(5.0, distanceMeters: 3.0),
+          2,
+        );
+      });
+      test('3.62-4.65s -> 3', () {
+        expect(
+          ScoringService.gaitScore(4.0, distanceMeters: 3.0),
+          3,
+        );
+      });
+      test('<3.62s -> 4', () {
+        expect(
+          ScoringService.gaitScore(3.0, distanceMeters: 3.0),
+          4,
+        );
+      });
+    });
   });
 
   group('chairStandScore', () {

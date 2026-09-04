@@ -23,15 +23,26 @@ class ScoringService {
     return 4;
   }
 
-  // Gait speed sub-score (0-4) from the faster of up to two trials
-  static int gaitScore(double? bestTimeSeconds) {
-    if (bestTimeSeconds == null) 
+  // Gait speed sub-score (0-4) from the faster of up to two trials.
+  static int gaitScore(double? bestTimeSeconds, {double distanceMeters = 4.0}) {
+    if (bestTimeSeconds == null)
       return 0;
-    if (bestTimeSeconds <= 4.81) 
+    // 3-meter course.
+    if (distanceMeters == 3.0) {
+      if (bestTimeSeconds < 3.62)
+        return 4;
+      if (bestTimeSeconds <= 4.65)
+        return 3;
+      if (bestTimeSeconds <= 6.52)
+        return 2;
+      return 1;
+    }
+    // 4-meter course.
+    if (bestTimeSeconds < 4.82)
       return 4;
-    if (bestTimeSeconds <= 6.20) 
+    if (bestTimeSeconds <= 6.20)
       return 3;
-    if (bestTimeSeconds <= 8.70) 
+    if (bestTimeSeconds <= 8.70)
       return 2;
     return 1;
   }

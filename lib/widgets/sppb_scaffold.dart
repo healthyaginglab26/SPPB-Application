@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
 /// Common page chrome used by every screen: a blue header bar with a
-/// back chevron, a title/breadcrumb, and a menu button — mirroring the
-/// left rail + header treatment in the NIA reference app screenshots.
+/// back chevron, a title/breadcrumb, and (on every screen except Home) a
+/// home button that jumps straight back to the Home screen, abandoning
+/// whatever assessment is in progress.
 /// [bottomBar] holds the primary action button(s) pinned to the bottom
 /// of the screen (e.g. "Next", "Go to test", "Save" / "Redo").
 class SppbScaffold extends StatelessWidget {
@@ -28,13 +29,14 @@ class SppbScaffold extends StatelessWidget {
         title: Text(title),
         automaticallyImplyLeading: showBackButton,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.menu),
-            tooltip: 'Menu',
-            onPressed: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-            },
-          ),
+          if (showBackButton)
+            IconButton(
+              icon: const Icon(Icons.home_outlined),
+              tooltip: 'Back to Home',
+              onPressed: () {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              },
+            ),
         ],
       ),
       body: SafeArea(

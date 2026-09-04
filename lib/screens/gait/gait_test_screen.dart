@@ -9,13 +9,16 @@ import '../../widgets/not_performed_dialog.dart';
 import '../../widgets/sppb_scaffold.dart';
 import '../chair_stand/chair_stand_intro_screen.dart';
 
-/// Times a single 4-meter walk trial: tap Start as the participant
-/// begins walking, tap again the instant they cross the finish line.
-/// Unlike the balance holds, this timer has no auto-stop.
+/// Times a single 4-meter walk trial
 class GaitTestScreen extends StatefulWidget {
-  const GaitTestScreen({super.key, required this.trialNumber});
+  const GaitTestScreen({
+    super.key,
+    required this.trialNumber,
+    required this.distanceMeters,
+  });
 
   final int trialNumber;
+  final double distanceMeters;
 
   @override
   State<GaitTestScreen> createState() => _GaitTestScreenState();
@@ -63,7 +66,10 @@ class _GaitTestScreenState extends State<GaitTestScreen> {
         MaterialPageRoute(
           builder: (_) => ChangeNotifierProvider.value(
             value: session,
-            child: const GaitTestScreen(trialNumber: 2),
+            child: GaitTestScreen(
+              trialNumber: 2,
+              distanceMeters: widget.distanceMeters,
+            ),
           ),
         ),
       );
@@ -84,6 +90,7 @@ class _GaitTestScreenState extends State<GaitTestScreen> {
     session.recordGaitTrial(
       GaitTrial(
         trialNumber: widget.trialNumber,
+        distanceMeters: widget.distanceMeters,
         attempted: true,
         timeSeconds: seconds,
       ),
@@ -99,6 +106,7 @@ class _GaitTestScreenState extends State<GaitTestScreen> {
     session.recordGaitTrial(
       GaitTrial(
         trialNumber: widget.trialNumber,
+        distanceMeters: widget.distanceMeters,
         attempted: false,
         notPerformedReason: reason,
       ),
@@ -118,7 +126,8 @@ class _GaitTestScreenState extends State<GaitTestScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Trial ${widget.trialNumber} of 2',
+            'Trial ${widget.trialNumber} of 2 '
+            '(${widget.distanceMeters.toStringAsFixed(0)}m course)',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 4),

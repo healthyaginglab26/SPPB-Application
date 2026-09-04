@@ -55,7 +55,10 @@ class SupabaseService {
     if (trials.isEmpty) return;
     await _client
         .from('balance_trials')
-        .insert(trials.map((t) => t.toRow(assessmentId)).toList());
+        .upsert(
+          trials.map((t) => t.toRow(assessmentId)).toList(),
+          onConflict: 'assessment_id,stance',
+        );
   }
 
   static Future<void> saveGaitTrials(
@@ -65,14 +68,19 @@ class SupabaseService {
     if (trials.isEmpty) return;
     await _client
         .from('gait_trials')
-        .insert(trials.map((t) => t.toRow(assessmentId)).toList());
+        .upsert(
+          trials.map((t) => t.toRow(assessmentId)).toList(),
+          onConflict: 'assessment_id,trial_number',
+        );
   }
 
   static Future<void> saveChairStand(
     String assessmentId,
     ChairStandResult result,
   ) async {
-    await _client.from('chair_stand_trials').insert(result.toRow(assessmentId));
+    await _client
+        .from('chair_stand_trials')
+        .upsert(result.toRow(assessmentId), onConflict: 'assessment_id');
   }
 
   // Final call once all three components are complete

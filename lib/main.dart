@@ -9,7 +9,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseService.initialize();
   runApp(const SppbApp());
-}
+} 
 
 class SppbApp extends StatelessWidget {
   const SppbApp({super.key});

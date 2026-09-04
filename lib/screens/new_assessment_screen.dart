@@ -7,10 +7,7 @@ import '../state/assessment_session.dart';
 import '../widgets/sppb_scaffold.dart';
 import 'sppb_intro_screen.dart';
 
-/// The patient / administrator header form, matching the fields in the
-/// reference app's "New Assessment" screen: date, time, assessment
-/// type, patient & physician name, location, and up to two
-/// administrators.
+/// The patient / administrator header form
 class NewAssessmentScreen extends StatefulWidget {
   const NewAssessmentScreen({super.key});
 

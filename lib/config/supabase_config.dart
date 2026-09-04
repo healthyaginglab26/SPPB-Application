@@ -1,16 +1,3 @@
-/// Supabase project credentials.
-///
-/// Robert: fill these in once the Supabase project exists, or (recommended
-/// for anything beyond local testing) pass them at build/run time instead
-/// of hardcoding them, e.g.:
-///
-///   flutter run \
-///     --dart-define=SUPABASE_URL=https://xxxx.supabase.co \
-///     --dart-define=SUPABASE_ANON_KEY=eyJ...
-///
-/// The --dart-define values below take priority over the fallback
-/// constants, so it's safe to leave the fallbacks blank in source control
-/// and only ever supply real values via --dart-define / your CI secrets.
 class SupabaseConfig {
   static const String url = String.fromEnvironment(
     'SUPABASE_URL',
