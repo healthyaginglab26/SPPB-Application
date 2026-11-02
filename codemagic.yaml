@@ -19,6 +19,11 @@ workflows:
     scripts:
       - name: Get Flutter packages
         script: flutter pub get
+      - name: Fetch signing files
+        script: |
+          app-store-connect fetch-signing-files "edu.ucf.healthyaginglab.sppbApp" \
+            --type IOS_APP_STORE \
+            --create
       - name: Set up code signing settings on Xcode project
         script: xcode-project use-profiles
       - name: Build ipa for TestFlight
