@@ -4,24 +4,19 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m2
     integrations:
-      # Name this exactly what you call the integration when you add your
-      # App Store Connect API key under Codemagic > Teams > Integrations >
-      # App Store Connect. That's where the key, key ID, and issuer ID
-      # actually live — never put them in this file.
+
       app_store_connect: sppb_app_store_connect
     environment:
       ios_signing:
-        distribution_type: development # switch to app_store once you're
-          # past initial device testing and want a normal TestFlight build
+        distribution_type: app_store
         bundle_identifier: edu.ucf.healthyaginglab.sppbApp # must exactly
           # match the bundle ID on the app record in App Store Connect
           # and in ios/Runner.xcodeproj — confirmed to match already.
       vars:
-        APP_STORE_CONNECT_ISSUER_ID: Encrypted(...) # Codemagic fills
-        APP_STORE_CONNECT_KEY_IDENTIFIER: Encrypted(...) # these in for
-        APP_STORE_CONNECT_PRIVATE_KEY: Encrypted(...) # you once the
-          # App Store Connect integration above is configured — you
-          # don't type these values in yourself.
+        APP_STORE_CONNECT_ISSUER_ID: Encrypted(...)
+        APP_STORE_CONNECT_KEY_IDENTIFIER: Encrypted(...)
+        APP_STORE_CONNECT_PRIVATE_KEY: Encrypted(...) 
+        
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -38,16 +33,11 @@ workflows:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
     publishing:
-      # Requires an App Store Connect API key with at least the "App
-      # Manager" role. Every successful build on this workflow uploads
-      # straight to TestFlight — no manual export/upload step.
       app_store_connect:
         auth: integration
         submit_to_testflight: true
         beta_groups:
-          - SPPB Lab Testers # create this internal testing group in
-            # App Store Connect's TestFlight tab and add your Apple ID
-            # (and any other lab members) to it
+          - SPPB Lab Testers 
   ios-sideload-unsigned:
     name: SPPB iOS - Unsigned Build (for Sideloadly)
     max_build_duration: 60
