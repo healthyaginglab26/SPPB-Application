@@ -4,15 +4,10 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m2
     integrations:
-
       app_store_connect: sppb_app_store_connect
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: edu.ucf.healthyaginglab.sppbApp # must exactly
-          # match the bundle ID on the app record in App Store Connect
-          # and in ios/Runner.xcodeproj — confirmed to match already.
-        
+      vars:
+        BUNDLE_ID: "edu.ucf.healthyaginglab.sppbApp"
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -21,9 +16,13 @@ workflows:
         script: flutter pub get
       - name: Fetch signing files
         script: |
-          app-store-connect fetch-signing-files "edu.ucf.healthyaginglab.sppbApp" \
+          app-store-connect fetch-signing-files $BUNDLE_ID \
             --type IOS_APP_STORE \
             --create
+      - name: Set up keychain
+        script: keychain initialize
+      - name: Add certificates to keychain
+        script: keychain add-certificates
       - name: Set up code signing settings on Xcode project
         script: xcode-project use-profiles
       - name: Build ipa for TestFlight
@@ -38,24 +37,4 @@ workflows:
         auth: integration
         submit_to_testflight: true
         beta_groups:
-          - SPPB Lab Testers 
-  ios-sideload-unsigned:
-    name: SPPB iOS - Unsigned Build (for Sideloadly)
-    max_build_duration: 60
-    instance_type: mac_mini_m2
-    environment:
-      flutter: stable
-      xcode: latest
-      cocoapods: default
-    scripts:
-      - name: Get Flutter packages
-        script: flutter pub get
-      - name: Build unsigned iOS app
-        script: flutter build ios --release --no-codesign
-      - name: Package unsigned IPA
-        script: |
-          mkdir -p build/ios/iphoneos/Payload
-          cp -r build/ios/iphoneos/Runner.app build/ios/iphoneos/Payload/
-          cd build/ios/iphoneos && zip -r ../../../unsigned.ipa Payload
-    artifacts:
-      - unsigned.ipa
+          - SPPB Lab Testers
