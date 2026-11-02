@@ -12,10 +12,6 @@ workflows:
         bundle_identifier: edu.ucf.healthyaginglab.sppbApp # must exactly
           # match the bundle ID on the app record in App Store Connect
           # and in ios/Runner.xcodeproj — confirmed to match already.
-      vars:
-        APP_STORE_CONNECT_ISSUER_ID: Encrypted(...)
-        APP_STORE_CONNECT_KEY_IDENTIFIER: Encrypted(...)
-        APP_STORE_CONNECT_PRIVATE_KEY: Encrypted(...) 
         
       flutter: stable
       xcode: latest
