@@ -5,7 +5,7 @@ description: >
   gait speed, and chair stand components, times each trial, computes
   the standard 0-12 SPPB score, and stores all raw data in Supabase.
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
