@@ -5,6 +5,7 @@ import '../../models/balance_trial.dart';
 import '../../state/assessment_session.dart';
 import '../../widgets/action_buttons.dart';
 import '../../widgets/circular_timer.dart';
+import '../../widgets/not_performed_dialog.dart';
 import '../../widgets/sppb_scaffold.dart';
 import 'balance_intro_screen.dart';
 
@@ -71,6 +72,29 @@ class _BalanceTestScreenState extends State<BalanceTestScreen> {
     goToScreenAfterBalance(context, widget.stance, session);
   }
 
+  /// Lets the administrator abandon the hold partway through (e.g. the
+  /// participant loses balance badly or asks to stop) and record why,
+  /// instead of forcing a Save with a misleadingly precise held time.
+  Future<void> _stopNotPerformed(AssessmentSession session) async {
+    _controller.stop();
+    final reason = await showNotPerformedDialog(context);
+    if (reason == null) {
+      // Administrator backed out of the dialog: resume the hold.
+      _controller.start();
+      return;
+    }
+    session.recordBalanceTrial(
+      BalanceTrial(
+        stance: widget.stance,
+        attempted: false,
+        notPerformedReason: reason,
+      ),
+    );
+    await session.saveBalanceTrials();
+    if (!mounted) return;
+    goToScreenAfterBalance(context, widget.stance, session);
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = context.watch<AssessmentSession>();
@@ -104,6 +128,13 @@ class _BalanceTestScreenState extends State<BalanceTestScreen> {
               child: CircularTimer(controller: _controller, onTap: _onDialTap),
             ),
           ),
+          if (_controller.isRunning)
+            Center(
+              child: TextButton(
+                onPressed: () => _stopNotPerformed(session),
+                child: const Text('Stop — not performed'),
+              ),
+            ),
         ],
       ),
       bottomBar: _controller.isFinished

@@ -4,6 +4,9 @@ import 'not_performed_reason.dart';
 class ChairStandResult {
   final bool singleStandAttempted;
   final bool? singleStandSuccessful;
+  // Only meaningful when singleStandSuccessful is true: whether the
+  // participant needed to use their arms to get up.
+  final bool? singleStandUsedArms;
   final NotPerformedReason? singleStandNotPerformedReason;
 
   final bool fiveStandAttempted;
@@ -14,6 +17,7 @@ class ChairStandResult {
   const ChairStandResult({
     this.singleStandAttempted = false,
     this.singleStandSuccessful,
+    this.singleStandUsedArms,
     this.singleStandNotPerformedReason,
     this.fiveStandAttempted = false,
     this.fiveStandTimeSeconds,
@@ -24,6 +28,7 @@ class ChairStandResult {
   ChairStandResult copyWith({
     bool? singleStandAttempted,
     bool? singleStandSuccessful,
+    bool? singleStandUsedArms,
     NotPerformedReason? singleStandNotPerformedReason,
     bool? fiveStandAttempted,
     double? fiveStandTimeSeconds,
@@ -34,6 +39,7 @@ class ChairStandResult {
       singleStandAttempted: singleStandAttempted ?? this.singleStandAttempted,
       singleStandSuccessful:
           singleStandSuccessful ?? this.singleStandSuccessful,
+      singleStandUsedArms: singleStandUsedArms ?? this.singleStandUsedArms,
       singleStandNotPerformedReason:
           singleStandNotPerformedReason ?? this.singleStandNotPerformedReason,
       fiveStandAttempted: fiveStandAttempted ?? this.fiveStandAttempted,
@@ -48,6 +54,7 @@ class ChairStandResult {
         'assessment_id': assessmentId,
         'single_stand_attempted': singleStandAttempted,
         'single_stand_successful': singleStandSuccessful,
+        'single_stand_used_arms': singleStandUsedArms,
         'single_stand_not_performed_reason':
             singleStandNotPerformedReason?.dbValue,
         'five_stand_attempted': fiveStandAttempted,

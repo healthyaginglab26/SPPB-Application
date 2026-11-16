@@ -64,7 +64,7 @@ class ChairStandIntroScreen extends StatelessWidget {
       bottomBar: NotPerformedOrGoButtons(
         onNotPerformed: () => _handleNotPerformed(context, session),
         onGoToTest: () {
-          Navigator.of(context).push(
+          return Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => ChangeNotifierProvider.value(
                 value: session,

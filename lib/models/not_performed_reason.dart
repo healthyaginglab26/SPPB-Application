@@ -4,7 +4,10 @@ enum NotPerformedReason {
   notAttemptedFeltUnsafe,
   unableToFollowInstruction,
   administratorStoppedTest,
-  refused;
+  refused,
+  // Used when a component is skipped on purpose (e.g. a gait-speed-only
+  // assessment), not because the participant couldn't do it.
+  notApplicable;
 
   String get label {
     switch (this) {
@@ -18,6 +21,8 @@ enum NotPerformedReason {
         return 'Administrator stopped test';
       case NotPerformedReason.refused:
         return 'Refused';
+      case NotPerformedReason.notApplicable:
+        return 'Not applicable (component skipped)';
     }
   }
 

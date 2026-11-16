@@ -5,11 +5,16 @@ import 'package:provider/provider.dart';
 import '../models/assessment.dart';
 import '../state/assessment_session.dart';
 import '../widgets/sppb_scaffold.dart';
+import 'gait/gait_intro_screen.dart';
 import 'sppb_intro_screen.dart';
 
 /// The patient / administrator header form
 class NewAssessmentScreen extends StatefulWidget {
-  const NewAssessmentScreen({super.key});
+  const NewAssessmentScreen({super.key, this.gaitOnly = false});
+
+  /// When true, skip straight to the Gait Speed component instead of the
+  /// full SPPB (Balance -> Gait -> Chair Stand) flow.
+  final bool gaitOnly;
 
   @override
   State<NewAssessmentScreen> createState() => _NewAssessmentScreenState();
@@ -104,7 +109,9 @@ class _NewAssessmentScreenState extends State<NewAssessmentScreen> {
         MaterialPageRoute(
           builder: (_) => ChangeNotifierProvider.value(
             value: session,
-            child: const SppbIntroScreen(),
+            child: widget.gaitOnly
+                ? const GaitIntroScreen()
+                : const SppbIntroScreen(),
           ),
         ),
       );

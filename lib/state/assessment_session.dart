@@ -4,13 +4,21 @@ import '../models/assessment.dart';
 import '../models/balance_trial.dart';
 import '../models/chair_stand_result.dart';
 import '../models/gait_trial.dart';
+import '../models/not_performed_reason.dart';
 import '../services/scoring_service.dart';
 import '../services/supabase_service.dart';
 
 /// Holds all state for the SPPB assessment currently being administered:
 class AssessmentSession extends ChangeNotifier {
+  AssessmentSession({this.gaitOnly = false});
+
   Assessment assessment = Assessment();
   String? _assessmentId;
+
+  /// True when this session was started from the Home screen's
+  /// "Go to Gait Speed Test Only" entry point: balance and chair stand
+  /// are never administered and get saved as "not applicable" instead.
+  final bool gaitOnly;
 
   final Map<BalanceStance, BalanceTrial> _balanceTrials = {};
   final List<GaitTrial> _gaitTrials = [];
@@ -18,6 +26,7 @@ class AssessmentSession extends ChangeNotifier {
 
   // Course length chosen on the gait course-length prompt (3.0 or 4.0),
   double? gaitDistanceMeters;
+  GaitStartType gaitStartType = GaitStartType.standing;
 
   String? get assessmentId => _assessmentId;
 
@@ -27,6 +36,11 @@ class AssessmentSession extends ChangeNotifier {
 
   void setGaitDistance(double meters) {
     gaitDistanceMeters = meters;
+    notifyListeners();
+  }
+
+  void setGaitStartType(GaitStartType startType) {
+    gaitStartType = startType;
     notifyListeners();
   }
 
@@ -84,6 +98,28 @@ class AssessmentSession extends ChangeNotifier {
   void updateChairStand(ChairStandResult Function(ChairStandResult) update) {
     chairStand = update(chairStand);
     notifyListeners();
+  }
+
+  /// Marks Balance and Chair Stand as not applicable and saves that to
+  /// Supabase, for a gait-speed-only assessment. Safe to call more than
+  /// once (e.g. if the administrator backs out and re-enters).
+  Future<void> skipNonGaitComponents() async {
+    for (final stance in BalanceStance.values) {
+      _balanceTrials[stance] = BalanceTrial(
+        stance: stance,
+        attempted: false,
+        notPerformedReason: NotPerformedReason.notApplicable,
+      );
+    }
+    chairStand = chairStand.copyWith(
+      singleStandAttempted: false,
+      singleStandNotPerformedReason: NotPerformedReason.notApplicable,
+      fiveStandAttempted: false,
+      fiveStandNotPerformedReason: NotPerformedReason.notApplicable,
+    );
+    notifyListeners();
+    await saveBalanceTrials();
+    await saveChairStand();
   }
 
   // Creates the assessment header row in Supabase. Called once, right after the "New Assessment" form is submitted, so an id exists for every subsequent trial insert.

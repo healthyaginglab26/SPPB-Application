@@ -7,18 +7,21 @@ import '../../widgets/action_buttons.dart';
 import '../../widgets/circular_timer.dart';
 import '../../widgets/not_performed_dialog.dart';
 import '../../widgets/sppb_scaffold.dart';
-import '../chair_stand/chair_stand_intro_screen.dart';
+import 'gait_flow.dart';
+import 'gait_trial_three_prompt_screen.dart';
 
-/// Times a single 4-meter walk trial
+/// Times a single walk trial (3m or 4m course, standing or moving start).
 class GaitTestScreen extends StatefulWidget {
   const GaitTestScreen({
     super.key,
     required this.trialNumber,
     required this.distanceMeters,
+    this.startType = GaitStartType.standing,
   });
 
   final int trialNumber;
   final double distanceMeters;
+  final GaitStartType startType;
 
   @override
   State<GaitTestScreen> createState() => _GaitTestScreenState();
@@ -60,28 +63,31 @@ class _GaitTestScreenState extends State<GaitTestScreen> {
     });
   }
 
-  void _goToNext(AssessmentSession session) {
-    if (widget.trialNumber == 1) {
+  Future<void> _goToNext(AssessmentSession session) async {
+    if (widget.trialNumber < 2) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => ChangeNotifierProvider.value(
             value: session,
             child: GaitTestScreen(
-              trialNumber: 2,
+              trialNumber: widget.trialNumber + 1,
               distanceMeters: widget.distanceMeters,
+              startType: widget.startType,
             ),
           ),
         ),
       );
-    } else {
+    } else if (widget.trialNumber == 2) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => ChangeNotifierProvider.value(
             value: session,
-            child: const ChairStandIntroScreen(),
+            child: const GaitTrialThreePromptScreen(),
           ),
         ),
       );
+    } else {
+      await goToScreenAfterGait(context, session);
     }
   }
 
@@ -91,13 +97,14 @@ class _GaitTestScreenState extends State<GaitTestScreen> {
       GaitTrial(
         trialNumber: widget.trialNumber,
         distanceMeters: widget.distanceMeters,
+        startType: widget.startType,
         attempted: true,
         timeSeconds: seconds,
       ),
     );
     await session.saveGaitTrials();
     if (!mounted) return;
-    _goToNext(session);
+    await _goToNext(session);
   }
 
   Future<void> _notPerformed(AssessmentSession session) async {
@@ -107,18 +114,47 @@ class _GaitTestScreenState extends State<GaitTestScreen> {
       GaitTrial(
         trialNumber: widget.trialNumber,
         distanceMeters: widget.distanceMeters,
+        startType: widget.startType,
         attempted: false,
         notPerformedReason: reason,
       ),
     );
     await session.saveGaitTrials();
     if (!mounted) return;
-    _goToNext(session);
+    await _goToNext(session);
+  }
+
+  /// Lets the administrator abandon the walk partway through (participant
+  /// stops, feels unsafe, etc.) and record why, instead of forcing a Save
+  /// with a partial/meaningless time.
+  Future<void> _stopNotPerformedMidWalk(AssessmentSession session) async {
+    _controller.stop();
+    final reason = await showNotPerformedDialog(context);
+    if (reason == null) {
+      // Administrator backed out of the dialog: resume the walk timer.
+      _controller.start();
+      return;
+    }
+    session.recordGaitTrial(
+      GaitTrial(
+        trialNumber: widget.trialNumber,
+        distanceMeters: widget.distanceMeters,
+        startType: widget.startType,
+        attempted: false,
+        notPerformedReason: reason,
+      ),
+    );
+    await session.saveGaitTrials();
+    if (!mounted) return;
+    await _goToNext(session);
   }
 
   @override
   Widget build(BuildContext context) {
     final session = context.watch<AssessmentSession>();
+    final trialLabel = widget.trialNumber == 3
+        ? 'Trial 3 (optional)'
+        : 'Trial ${widget.trialNumber} of 2';
 
     return SppbScaffold(
       title: 'Gait Speed Test',
@@ -126,8 +162,9 @@ class _GaitTestScreenState extends State<GaitTestScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Trial ${widget.trialNumber} of 2 '
-            '(${widget.distanceMeters.toStringAsFixed(0)}m course)',
+            '$trialLabel '
+            '(${widget.distanceMeters.toStringAsFixed(0)}m course, '
+            '${widget.startType.label})',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 4),
@@ -137,8 +174,13 @@ class _GaitTestScreenState extends State<GaitTestScreen> {
                 : _controller.isRunning
                     ? 'Timing… tap the dial the instant the participant '
                         'crosses the finish line.'
-                    : 'Position the participant at the start of the '
-                        'course. Press Start as they begin walking.',
+                    : widget.startType == GaitStartType.moving
+                        ? 'Position the participant before the start of '
+                            'the course so they are already moving when '
+                            'they cross the start line. Press Start as '
+                            'they cross it.'
+                        : 'Position the participant at the start of the '
+                            'course. Press Start as they begin walking.',
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 32),
@@ -152,6 +194,13 @@ class _GaitTestScreenState extends State<GaitTestScreen> {
               child: TextButton(
                 onPressed: () => _notPerformed(session),
                 child: const Text('Not performed'),
+              ),
+            ),
+          if (_controller.isRunning)
+            Center(
+              child: TextButton(
+                onPressed: () => _stopNotPerformedMidWalk(session),
+                child: const Text('Stop — not completed'),
               ),
             ),
         ],

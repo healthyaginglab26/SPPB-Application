@@ -9,6 +9,17 @@ import 'new_assessment_screen.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+  void _startAssessment(BuildContext context, {required bool gaitOnly}) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChangeNotifierProvider(
+          create: (_) => AssessmentSession(gaitOnly: gaitOnly),
+          child: NewAssessmentScreen(gaitOnly: gaitOnly),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SppbScaffold(
@@ -52,21 +63,25 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomBar: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => ChangeNotifierProvider(
-                  create: (_) => AssessmentSession(),
-                  child: const NewAssessmentScreen(),
-                ),
-              ),
-            );
-          },
-          child: const Text('New Assessment'),
-        ),
+      bottomBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => _startAssessment(context, gaitOnly: false),
+              child: const Text('Go to SPPB Test'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => _startAssessment(context, gaitOnly: true),
+              child: const Text('Go to Gait Speed Test Only'),
+            ),
+          ),
+        ],
       ),
     );
   }

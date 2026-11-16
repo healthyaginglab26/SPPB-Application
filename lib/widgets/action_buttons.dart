@@ -17,8 +17,11 @@ class NotPerformedOrGoButtons extends StatefulWidget {
     this.goToTestLabel = 'Go to test',
   });
 
-  final VoidCallback onNotPerformed;
-  final VoidCallback onGoToTest;
+  /// Returning a Future that resolves when the action is fully done
+  /// (including "done because the administrator came back from a
+  /// pushed screen") lets this widget re-enable itself automatically.
+  final Future<void> Function() onNotPerformed;
+  final Future<void> Function() onGoToTest;
   final String goToTestLabel;
 
   @override
@@ -29,10 +32,17 @@ class NotPerformedOrGoButtons extends StatefulWidget {
 class _NotPerformedOrGoButtonsState extends State<NotPerformedOrGoButtons> {
   bool _busy = false;
 
-  void _fire(VoidCallback callback) {
+  Future<void> _fire(Future<void> Function() callback) async {
     if (_busy) return;
     setState(() => _busy = true);
-    callback();
+    try {
+      await callback();
+    } finally {
+      // Covers both: the dialog/action was cancelled (nothing to navigate
+      // to), and the administrator pressed Back after "Go to test" — the
+      // pushed route's Future only resolves once they're back here.
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override

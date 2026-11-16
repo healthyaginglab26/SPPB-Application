@@ -6,10 +6,11 @@ import '../../state/assessment_session.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/not_performed_dialog.dart';
 import '../../widgets/sppb_scaffold.dart';
-import '../chair_stand/chair_stand_intro_screen.dart';
+import 'gait_flow.dart';
 import 'gait_test_screen.dart';
 
-// Instructions for the usual-pace walk, followed by a choice of course length (3-meter / 4-meter / Not performed)
+// Instructions for the usual-pace walk, followed by a choice of course
+// length / start type (4m Standing / 4m Moving / 3m), or Not performed.
 class GaitIntroScreen extends StatefulWidget {
   const GaitIntroScreen({super.key});
 
@@ -34,29 +35,41 @@ class _GaitIntroScreenState extends State<GaitIntroScreen> {
     );
     await session.saveGaitTrials();
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => ChangeNotifierProvider.value(
-          value: session,
-          child: const ChairStandIntroScreen(),
-        ),
-      ),
-    );
+    try {
+      await goToScreenAfterGait(context, session);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
-  void _chooseDistance(AssessmentSession session, double meters) {
+  Future<void> _chooseCourse(
+    AssessmentSession session,
+    double meters,
+    GaitStartType startType,
+  ) async {
     if (_busy) return;
     setState(() => _busy = true);
 
     session.setGaitDistance(meters);
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ChangeNotifierProvider.value(
-          value: session,
-          child: GaitTestScreen(trialNumber: 1, distanceMeters: meters),
+    session.setGaitStartType(startType);
+    try {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ChangeNotifierProvider.value(
+            value: session,
+            child: GaitTestScreen(
+              trialNumber: 1,
+              distanceMeters: meters,
+              startType: startType,
+            ),
+          ),
         ),
-      ),
-    );
+      );
+    } finally {
+      // Re-enable the course buttons if the administrator came back here
+      // (e.g. pressed Back) instead of completing the trial.
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
@@ -87,7 +100,8 @@ class _GaitIntroScreenState extends State<GaitIntroScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Select the course length being used for this walk.',
+              'Select the course length and start type being used for '
+              'this walk.',
               style: Theme.of(context)
                   .textTheme
                   .bodyLarge
@@ -102,15 +116,29 @@ class _GaitIntroScreenState extends State<GaitIntroScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _busy ? null : () => _chooseDistance(session, 4.0),
-              child: const Text('4 meter course'),
+              onPressed: _busy
+                  ? null
+                  : () => _chooseCourse(session, 4.0, GaitStartType.standing),
+              child: const Text('4m Standing Start (Standard SPPB)'),
             ),
           ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _busy ? null : () => _chooseDistance(session, 3.0),
+              onPressed: _busy
+                  ? null
+                  : () => _chooseCourse(session, 4.0, GaitStartType.moving),
+              child: const Text('4m Moving Start'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _busy
+                  ? null
+                  : () => _chooseCourse(session, 3.0, GaitStartType.standing),
               child: const Text('3 meter course'),
             ),
           ),

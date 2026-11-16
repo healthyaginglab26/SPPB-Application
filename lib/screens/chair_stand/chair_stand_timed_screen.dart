@@ -25,6 +25,7 @@ class _ChairStandTimedScreenState extends State<ChairStandTimedScreen> {
   late SppbTimerController _controller;
   int _reps = 0;
   bool _timedOut = false;
+  NotPerformedReason? _timeoutReason;
 
   @override
   void initState() {
@@ -35,10 +36,23 @@ class _ChairStandTimedScreenState extends State<ChairStandTimedScreen> {
   }
 
   void _onChanged() {
-    if (_controller.isFinished && _reps < _targetReps) {
+    final justTimedOut =
+        _controller.isFinished && _reps < _targetReps && !_timedOut;
+    if (justTimedOut) {
       _timedOut = true;
+      // Ask why the test wasn't completed once the 60s cap is hit without
+      // reaching 5 reps (mirrors the reason prompt already shown when the
+      // administrator taps "Stop — not performed").
+      WidgetsBinding.instance.addPostFrameCallback((_) => _promptTimeoutReason());
     }
     if (mounted) setState(() {});
+  }
+
+  Future<void> _promptTimeoutReason() async {
+    if (!mounted) return;
+    final reason = await showNotPerformedDialog(context);
+    if (!mounted) return;
+    setState(() => _timeoutReason = reason);
   }
 
   @override
@@ -64,6 +78,7 @@ class _ChairStandTimedScreenState extends State<ChairStandTimedScreen> {
     setState(() {
       _reps = 0;
       _timedOut = false;
+      _timeoutReason = null;
       _controller = SppbTimerController(
         autoStopAt: const Duration(seconds: _maxSeconds),
       )..addListener(_onChanged);
@@ -82,12 +97,13 @@ class _ChairStandTimedScreenState extends State<ChairStandTimedScreen> {
   Future<void> _save(AssessmentSession session, {NotPerformedReason? reason}) async {
     final seconds = _controller.displayElapsed.inMilliseconds / 1000.0;
     final completed = _reps >= _targetReps && !_timedOut;
+    final effectiveReason = reason ?? _timeoutReason;
     session.updateChairStand(
       (c) => c.copyWith(
         fiveStandAttempted: true,
         fiveStandTimeSeconds: seconds,
         fiveStandCompleted: completed,
-        fiveStandNotPerformedReason: reason,
+        fiveStandNotPerformedReason: effectiveReason,
       ),
     );
     await session.saveChairStand();

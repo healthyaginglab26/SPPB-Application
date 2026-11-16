@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../services/report_service.dart';
 import '../state/assessment_session.dart';
 import '../theme/app_theme.dart';
 import '../widgets/sppb_scaffold.dart';
@@ -34,6 +35,31 @@ class _SummaryScreenState extends State<SummaryScreen> {
     }
   }
 
+  Future<void> _print(AssessmentSession session) async {
+    try {
+      await ReportService.printResults(session);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Could not print results: $e')));
+    }
+  }
+
+  Future<void> _email(AssessmentSession session) async {
+    try {
+      final opened = await ReportService.emailResults(session);
+      if (!opened && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No email app is available on this device.')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Could not open email: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = context.watch<AssessmentSession>();
@@ -62,6 +88,26 @@ class _SummaryScreenState extends State<SummaryScreen> {
               score: session.totalScore,
               maxScore: 12,
               emphasize: true,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _print(session),
+                    icon: const Icon(Icons.print_outlined),
+                    label: const Text('Print Results'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _email(session),
+                    icon: const Icon(Icons.email_outlined),
+                    label: const Text('Email Results'),
+                  ),
+                ),
+              ],
             ),
             if (_error != null) ...[
               const SizedBox(height: 24),

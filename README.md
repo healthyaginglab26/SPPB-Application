@@ -7,59 +7,6 @@ tandem holds), gait speed (two 4-meter walk trials), and chair stand
 Every raw timing/observation is written straight to Supabase alongside
 the computed sub-scores (0-4 each) and total score (0-12).
 
-## 1. Set up Supabase
-
-1. Create the Supabase project (Robert).
-2. In the Supabase SQL editor, run `supabase/schema.sql` from this
-   repo. It creates four tables (`assessments`, `balance_trials`,
-   `gait_trials`, `chair_stand_trials`) with row-level security
-   policies that allow the app's anon key to insert/select/update but
-   not delete. Read the comment above the RLS section — the anon key
-   ships inside the compiled app, so those policies are the only thing
-   standing between the iPad and the tables.
-3. Grab the project URL and anon key from Project Settings → API.
-
-## 2. Configure the app
-
-Either edit the fallback constants in
-`lib/config/supabase_config.dart`, or (safer — keeps the keys out of
-source control) pass them at run/build time:
-
-```bash
-flutter run \
-  --dart-define=SUPABASE_URL=https://xxxx.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=eyJ...
-```
-
-If you build a release IPA, pass the same `--dart-define` flags to
-`flutter build ipa`.
-
-## 3. Run it
-
-```bash
-flutter pub get
-flutter run   # with an iPad simulator or a connected iPad selected
-```
-
-Run the unit tests for the scoring logic with:
-
-```bash
-flutter test
-```
-
-> **Note on how this project was built:** this codebase was written
-> without access to a Flutter/Dart toolchain in the authoring
-> environment (no network access to install the SDK), so it has not
-> been run through `flutter pub get` / `flutter analyze` / `flutter
-> run` yet. The scoring algorithm itself (`lib/services/scoring_service.dart`)
-> was independently verified by porting it to Python and checking it
-> against the full set of cases in `test/scoring_service_test.dart` —
-> those all pass. But the Flutter/Dart code has only been reviewed by
-> eye for syntax, so please run `flutter pub get` and `flutter run` as
-> your first step and send me anything that doesn't compile — that's
-> normal for a first pass like this and quick to fix once I can see the
-> actual error.
-
 ## App flow
 
 1. **Home** → "New Assessment"
@@ -98,7 +45,7 @@ https://sppbguide.com):
   11.20-13.69s, 2 for 13.70-16.69s, 1 for 16.70-59.99s.
 - **Total:** sum of the three, 0-12.
 
-## Design decisions (per project discussion)
+## Design decisions 
 
 - **No login / kiosk mode**: administrator name is a free-text field
   per assessment, matching the reference app. No Supabase Auth.
@@ -138,17 +85,3 @@ lib/
 supabase/schema.sql                Run this in the Supabase SQL editor
 test/scoring_service_test.dart     Unit tests for the scoring algorithm
 ```
-
-## Known follow-ups / things to decide together
-
-- **Gait course distance**: the model supports a configurable
-  `distanceMeters` per trial (stored per row), but the UI currently
-  assumes the standard 4m course and doesn't expose a picker for a 3m
-  alternative. Easy to add if the lab uses a shorter course sometimes.
-- **Editing a saved assessment**: there's currently no screen to pull
-  up a past assessment and review/correct it — only forward data
-  entry. Worth adding if data QA is part of the workflow.
-- **iPad orientation/sizing**: built with standard responsive Flutter
-  layouts, but hasn't been visually tuned against an actual iPad
-  screen yet — recommend a pass on real hardware before hitting the
-  reference-app's UI closely.

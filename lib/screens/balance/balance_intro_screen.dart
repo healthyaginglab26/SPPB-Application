@@ -91,7 +91,7 @@ class BalanceIntroScreen extends StatelessWidget {
               child: BalanceTestScreen(stance: stance),
             ),
           );
-          Navigator.of(context).push(route);
+          return Navigator.of(context).push(route);
         },
       ),
     );
